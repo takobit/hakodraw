@@ -4,127 +4,52 @@
 
 ## 目的
 
-- `main` ブランチを常に動作する状態に保つ
-- Issue / Pull Request / Commit の役割を分ける
-- Pull Request 単位で変更内容を確認できるようにする
-- 後から設計判断や変更理由を追跡できるようにする
-- Semantic Versioning と整合性のある履歴を残す
+開発が進むにつれて、変更理由、作業内容、最終的な変更履歴が混ざると、後から判断の経緯を追いにくくなる。
+
+そのため、Issue / Pull Request / Commit の役割を明確に分け、`main` ブランチに読みやすい履歴を残すための運用ルールを定める。
 
 ## 基本方針
 
-履歴は以下の役割で管理する。
+Issue から作業ブランチ・PR を作成し、`Squash and Merge` で作業内容を一つのコミットにまとめて `main` ブランチにマージする。
 
-| 場所                | 役割                             |
-| ------------------- | -------------------------------- |
-| Issue               | なぜ作業するのか                 |
-| Pull Request        | どのように実装したのか           |
-| main のコミット履歴 | 最終的に何が追加・変更されたのか |
+| 場所                  | 役割                                                                                           |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| Issue                 | 何をするか、なぜその作業するのかを残す                                                         |
+| Pull Request          | どのように実装したのか（作業ブランチのコミット履歴）を残す（Issue 番号で紐づけ）               |
+| `main` のコミット履歴 | 作業ブランチ・PRを `Squash` してマージし、プロダクトの変更履歴として扱う（Issue 番号で紐づけ） |
 
-`main` ブランチは、プロダクトの変更履歴として扱う。
-作業は `main` から作業ブランチを作成し、Pull Request を通して `main` に反映する。
+## 作業フロー
 
-## ブランチ戦略
+### 1. Issue を作成
 
-GitHub Flow を基本とし、`main` と作業ブランチを使う。
-
-| ブランチ    | 説明                                               | 作業例                   | ブランチ例                         |
-| ----------- | -------------------------------------------------- | ------------------------ | ---------------------------------- |
-| main        | 本番相当。常に動作する状態                         | -                        | -                                  |
-| feature/\*  | 機能追加（MINOR）                                  | ユーザー認証追加         | feature/12-add-authentication      |
-| fix/\*      | バグ修正（PATCH）                                  | Canvasリサイズ不具合修正 | fix/18-canvas-resize               |
-| chore/\*    | 環境構築・設定変更・依存関係更新・不要ファイル削除 | Next.js初期化            | chore/1-init-nextjs                |
-| docs/\*     | ドキュメント追加・修正                             | README更新               | docs/5-update-readme               |
-| test/\*     | テスト追加・修正                                   | Go service test追加      | test/20-add-practice-service-test  |
-| refactor/\* | 挙動を変えないコード整理・リファクタリング         | service分割              | refactor/25-split-practice-service |
-
-## Issue 運用
-
-作業は可能な範囲で Issue を作成してから開始する。
-Issue では、何を行うか、なぜ必要か、完了条件は何かを管理する。
-
-### Issue テンプレート
+作業を始める前に Issue を作成し、何をするか、なぜ必要か、タスク、完了条件は何かを整理する。
 
 ```md
 ## 概要
 
-何をするか
+練習タイマー機能を追加する。
 
 ## 目的
 
-なぜ必要か
+練習中に経過時間を確認できるようにし、ユーザーが練習時間を把握しやすくする。
 
 ## タスク
 
-- [ ] 作業1
-- [ ] 作業2
+- [ ] タイマー用hookを追加する
+- [ ] タイマー表示UIを追加する
+- [ ] 開始、停止、リセット操作を追加する
+- [ ] ローカルで動作確認する
 
 ## 完了条件
 
-何をもって完了とするか
+- [ ] 練習画面で経過時間が表示される
+- [ ] 開始、停止、リセットが正しく動作する
+- [ ] `make test` が成功する
 ```
 
-## Issue 番号の扱い
+### 2. `main` ブランチから作業ブランチを作成
 
-Issue番号は、Issue / 作業ブランチ / Pull Request / `main` ブランチの履歴を関連付けるために利用する。
-
-### 作業ブランチ
-
-`main` から作成する作業ブランチには、Issue番号を含める。
-
-```txt
-feature/12-add-practice-timer
-fix/18-canvas-resize
-refactor/25-split-practice-service
-```
-
-作業ブランチ名の Issue番号は、作業内容を識別しやすくする目的で利用する。
-
-### Pull Request title
-
-PR一覧で関連Issueを識別しやすくするため、Pull Request title には Issue番号を含める。
-
-```txt
-[#12] feat: add practice timer
-```
-
-Pull Request title では視認性を優先し、Issue番号を先頭に置いてよい。
-
-### Pull Request body
-
-Pull Request body には関連 Issue を記載する。
-
-```md
-Closes #12
-```
-
-これにより、Pull Request と Issue を GitHub 上で正式に関連付けできる。
-merge 時には、Issue が自動で close される。
-
-### `main` ブランチへ残る squash merge commit
-
-`main` ブランチへ merge する際は、`Squash and merge` を利用する。
-
-`main` に残る squash merge commit は、Conventional Commits の形式を優先する。
-
-```txt
-feat: add practice timer (#12)
-```
-
-`main` の履歴では `type:` を先頭に置き、Issue番号は suffix として付与する。
-
-### 方針
-
-- 作業ブランチには Issue番号を含める
-- Pull Request title では視認性のため Issue番号を先頭に置く
-- Pull Request body では `Closes #<Issue番号>` を利用して GitHub 上で正式に関連付ける
-- `main` の squash merge commit は Conventional Commits を優先し、Issue番号を末尾に付与する
-- `main` ブランチは、整理されたプロダクト履歴として扱う
-
-## 作業フロー
-
-### 1. main から作業ブランチを作成
-
-最新の `main` から作業ブランチを作成する。
+最新の `main` から作業ブランチを作成する。詳しくは[ブランチについて](#ブランチについて)を参照。
 
 ```sh
 git checkout main
@@ -132,10 +57,10 @@ git pull
 git checkout -b feature/12-add-practice-timer
 ```
 
-### 2. 作業・コミット
+### 3. 作業・コミット
 
 作業ブランチ上で実装し、必要な単位でコミットする。
-作業中のコミットは厳密でなくてもよいが、可能な範囲で Conventional Commits を利用する。
+作業中のコミットは厳密でなくてもよいが、可能な範囲で Conventional Commits を利用する。詳しくは[コミットについて](#コミットについて)を参照。
 
 ```txt
 wip: タイマーUIを仮実装
@@ -143,7 +68,7 @@ tmp: タイマーhookを検証
 fix: タイマーのリセット不具合を修正
 ```
 
-### 3. Pull Request を作成
+### 4. Pull Request を作成
 
 作業ブランチを push し、Pull Request を作成する。
 Pull Request には、目的、変更内容、確認方法、関連 Issue を記載する。
@@ -169,49 +94,29 @@ Pull Request には、目的、変更内容、確認方法、関連 Issue を記
 Closes #12
 ```
 
-### 4. CI・レビュー
+### 5. CI・レビュー
 
-CI導入前は、マージ前にローカルで確認する。
-該当するコマンドが未整備の場合は、利用可能な範囲で確認する。
+CI導入前はローカルで静的解析・自動テストを実施して問題ないかを確認する。
 
-```sh
-make lint
-make test
-make build
-```
+レビューは機能追加や認証・認可、BDスキーマ・API使用の変更等、比較的重めの変更場合に Codex やその他 AI にレビューさせる。
 
-CI導入後は、Pull Request 上で以下が成功してから `main` にマージする。
-初期段階では、存在するアプリケーションのチェックのみ必須とする。
-
-- frontend lint
-- frontend test
-- frontend build
-- backend test
-- backend build
-
-一人開発のため、人間のレビューは必須としない。
-ただし、設計変更、認証・権限・セキュリティ、DBスキーマ変更、API仕様変更、大きめのリファクタリングを含む Pull Request は、Codex / AI にレビューさせる。
-
-### 5. main へマージ
+### 6. `main` ブランチへの `Squash And Merge`
 
 `main` へマージする前に、以下を確認する。
 
-- CI またはローカル確認が成功している
-- 不要な差分が含まれていない
-- Pull Request の目的が明確である
-- Pull Request が大きすぎない
+- 静的解析・自動テストが PASS しているか
+- 不要な差分が含まれていないか
+- Pull Request が大きすぎないか
 
-原則として、GitHub 上で `Squash and merge` を使用する。
-作業途中の細かいコミットは Pull Request に残し、`main` には Pull Request 単位の整理されたコミットを残す。
-Squash merge commit には、関連 Issue 番号を suffix として付与する。
+問題なければ GitHub 上で `Squash and merge` を選択してクリックし、コミットメッセージ末尾に Issue 番号が含まれていることを確認してから `main` ブランチへマージする。
 
 ```txt
 feat: 練習タイマーを追加 (#12)
 ```
 
-### 6. 作業ブランチを削除
+### 7. 作業ブランチを削除
 
-マージ後は、GitHub 上で作業ブランチを削除する。
+マージ後は PR 画面から作業ブランチを削除する。
 
 ```txt
 Delete branch
@@ -220,28 +125,86 @@ Delete branch
 必要であれば、ローカルブランチも削除する。
 
 ```sh
-git branch -d <branch-name>
+git branch -d feature/12-add-practice-timer
 ```
 
-## コミットルール
+## Issue 番号の扱い
+
+Issue番号は、Issue と作業ブランチ / Pull Request / `main` ブランチのコミットを関連付けるために利用する。
+
+### Issue と作業ブランチの紐づけ
+
+`main` から作成する作業ブランチには、Issue番号を付与する。
+
+作業ブランチ名の Issue番号は、作業ブランチがどの Issue と関連するのか識別しやすくする目的で利用する。
+
+```txt
+feature/12-add-practice-timer
+fix/18-canvas-resize
+refactor/25-split-practice-service
+```
+
+### Issue と Pull Request の紐づけ
+
+PR一覧で関連 Issue を識別しやすくするため、Pull Request のタイトル先頭には Issue 番号を付与する。
+
+```txt
+[#12] feat: 練習タイマーを追加
+```
+
+また Pull Request 本文には関連 Issue 番号を記載し、Pull Request と Issue を GitHub 上で紐づける。
+
+これにより Pull Request の merge 時には Issue が自動で close される。
+
+```md
+## 関連Issue
+
+Closes #12
+```
+
+### Issue と `main` ブランチの紐づけ
+
+Pull Request を `Squash And Merge` して `main` ブランチにマージする際、コミットメッセージに Pull Request の作業内容を Conventional Commits の形式で記述し、末尾に Issue 番号を含める。
+
+```txt
+feat: 練習タイマーを追加 (#12)
+```
+
+GitHub では `#12` のような Issue 番号は自動でリンクされる。
+
+`main` ブランチの squash merge commit に付与する Issue 番号は、履歴から関連 Issue を追跡しやすくするために利用する。
+
+## ブランチについて
+
+[GitHub Flow](https://docs.github.com/ja/get-started/using-github/github-flow) を基本とし、`main` ブランチと作業ブランチで作業を行う。
+
+### `main` ブランチ
+
+常に動作可能な状態を維持し、本番環境に deploy 可能なソースコードを保持する。
+
+### 作業ブランチ
+
+最新の `main` ブランチから Issue に対応する以下の作業ブランチを作成する。
+
+| プレフィックス | 説明                                                            | 作業例                    | ブランチ例                         |
+| -------------- | --------------------------------------------------------------- | ------------------------- | ---------------------------------- |
+| feature/\*     | 新しい機能を追加し、セマンティックバージョンの `MINOR` を上げる | ユーザー認証追加          | feature/12-add-authentication      |
+| fix/\*         | バグを修正し、セマンティックバージョンの `PATCH` を上げる       | Canvas リサイズ不具合修正 | fix/18-canvas-resize               |
+| chore/\*       | 環境構築・設定変更・依存関係更新・不要ファイル削除を行う        | Next.js 初期化            | chore/1-init-nextjs                |
+| docs/\*        | ドキュメント追加・修正を行う                                    | README 更新               | docs/5-update-readme               |
+| test/\*        | テスト追加・修正を行う                                          | Go service test 追加      | test/20-add-practice-service-test  |
+| refactor/\*    | 挙動を変えないコード整理・リファクタリングを行う                | service 分割              | refactor/25-split-practice-service |
+
+## コミットについて
 
 本リポジトリでは、[Conventional Commits](https://www.conventionalcommits.org/ja/v1.0.0/) を基本とする。
 コミットメッセージの件名と本文は日本語で記述する。
 
 ### 運用方針
 
-Conventional Commits は、主に `main` に残る履歴を整理する目的で利用する。
 作業ブランチ上では、必要に応じて `wip:` や `tmp:` のような一時的なコミットを行ってもよい。
 
 ただし、Pull Request を `Squash and merge` する際は、整理された Conventional Commit 形式のメッセージを使用する。
-
-```txt
-作業コミット:
-  必要以上に厳密にしなくてよい
-
-main の履歴:
-  読みやすく整理する
-```
 
 ### 基本形式
 
@@ -273,15 +236,16 @@ BREAKING CHANGE: <破壊的変更の内容>
 
 ### type 一覧
 
-| type     | 説明                                   | メッセージ例                       |
-| -------- | -------------------------------------- | ---------------------------------- |
-| feat     | 機能追加                               | feat: 練習タイマーを追加           |
-| fix      | バグ修正                               | fix: Canvasのリサイズ不具合を修正  |
-| docs     | ドキュメント変更                       | docs: リポジトリルールを追加       |
-| style    | 挙動を変えない見た目・フォーマット修正 | style: ページコンポーネントを整形  |
-| refactor | 挙動を変えないリファクタリング         | refactor: 練習セッション処理を分割 |
-| test     | テスト追加・修正                       | test: タイマーのテストを追加       |
-| chore    | 設定変更・環境構築・依存関係更新       | chore: Next.jsアプリを初期化       |
+| type     | 説明                                   | メッセージ例                             |
+| -------- | -------------------------------------- | ---------------------------------------- |
+| feat     | 機能追加                               | feat: 練習タイマーを追加                 |
+| fix      | バグ修正                               | fix: Canvasのリサイズ不具合を修正        |
+| docs     | ドキュメント変更                       | docs: リポジトリルールを追加             |
+| style    | 挙動を変えない見た目・フォーマット修正 | style: ページコンポーネントを整形        |
+| refactor | 挙動を変えないリファクタリング         | refactor: 練習セッション処理を分割       |
+| test     | テスト追加・修正                       | test: タイマーのテストを追加             |
+| ci       | CI/CD設定変更                          | ci: GitHub Actionsのbuild workflowを追加 |
+| chore    | 設定変更・環境構築・依存関係更新       | chore: Next.jsアプリを初期化             |
 
 ### メッセージ本文
 
@@ -293,13 +257,6 @@ feat: 練習タイマーを追加
 
 練習画面で経過時間を確認できるようにするため、タイマー表示を追加した。
 開始、停止、リセットの操作に対応する。
-```
-
-```txt
-fix: Canvasのリサイズ不具合を修正
-
-ウィンドウ幅を変更したときに描画領域のサイズが更新されない問題を修正した。
-既存の描画内容が消えないよう、リサイズ時の再描画処理も調整した。
 ```
 
 ### Breaking Change
@@ -330,54 +287,39 @@ BREAKING CHANGE: `sessions` のレスポンスを配列から `{ items, total }`
 
 不要な差分、デバッグ用コード、生成物の混入がないことを確認してからコミットする。
 
-## Semantic Versioning
+## バージョン方針
 
-本リポジトリでは Semantic Versioning を基本とする。
+`main` ブランチに残る Squash Merge Commit は、将来的に `main` ブランチへバージョンタグを付与する際の判断材料として扱う。
 
-```txt
-MAJOR.MINOR.PATCH
-```
-
-| version | 説明                       |
-| ------- | -------------------------- |
-| MAJOR   | 後方互換性を壊す変更       |
-| MINOR   | 後方互換性を保った機能追加 |
-| PATCH   | 後方互換性を保ったバグ修正 |
-
-Conventional Commits との対応は以下とする。
-
-| Commit          | Version |
-| --------------- | ------- |
-| feat            | MINOR   |
-| fix             | PATCH   |
-| `!`付きのCommit | MAJOR   |
-| BREAKING CHANGE | MAJOR   |
-
-初期開発中は `0.x.x` を利用する。
-`1.0.0` は、最初の安定版リリースとする。
+バージョンタグは `v0.0.0` 形式を利用する。
 
 ```txt
-0.1.0
-0.2.0
-0.3.0
+v0.1.0
+v0.2.0
+v0.2.1
 ```
 
-すべての `main` へのマージに対して、必ずバージョン付与・デプロイを行うわけではない。
-原則として、ユーザー向けの動作や機能に影響する変更のみリリース対象とする。
+Squash Merge Commit の type をもとに、セマンティックバージョニングの考え方で次のバージョンを判断する。
 
-| type            | バージョン付与 | 備考                         |
-| --------------- | -------------- | ---------------------------- |
-| feat            | MINOR          | 機能追加                     |
-| fix             | PATCH          | バグ修正                     |
-| `!`付きのCommit | MAJOR          | 後方互換性を壊す変更         |
-| BREAKING CHANGE | MAJOR          | 大規模な破壊的変更の補足     |
-| docs            | 原則なし       | ドキュメントのみ             |
-| chore           | 原則なし       | 設定・環境構築・依存関係更新 |
-| style           | 原則なし       | フォーマットのみ             |
-| test            | 原則なし       | テストのみ                   |
-| refactor        | 原則なし       | 挙動が変わらない場合         |
+| Squash Merge Commit | バージョン更新 | 例                     |
+| ------------------- | -------------- | ---------------------- |
+| feat                | MINOR          | `v0.1.0` から `v0.2.0` |
+| fix                 | PATCH          | `v0.2.0` から `v0.2.1` |
+| `!`付きのCommit     | MAJOR          | `v1.2.3` から `v2.0.0` |
+| BREAKING CHANGE     | MAJOR          | `v1.2.3` から `v2.0.0` |
 
-ただし、`chore`、`refactor` であっても、実行環境・依存関係・API互換性・ユーザー向け挙動に影響する場合は、必要に応じてリリース対象とする。
+```txt
+feat: 練習タイマーを追加 (#12)
+fix: Canvasのリサイズ不具合を修正 (#18)
+feat!: APIレスポンス形式を変更 (#30)
+```
+
+すべての `main` へのマージに対して、必ずバージョンタグを付与するわけではない。
+原則として、ユーザー向けの動作や機能に影響する変更をリリース対象とする。
+
+ドキュメント変更、テスト追加、CI設定変更、フォーマット修正など、ユーザー向けの動作に影響しない変更は、原則としてバージョンタグ付与の対象外とする。
+
+ただし、`chore` や `refactor` であっても、実行環境、依存関係、API互換性、ユーザー向け挙動に影響する場合は、必要に応じてリリース対象とする。
 
 ## main ブランチ保護
 
