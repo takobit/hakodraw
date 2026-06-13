@@ -164,15 +164,15 @@ Closes #12
 
 ### Issue と `main` ブランチの紐づけ
 
-Pull Request を `Squash And Merge` して `main` ブランチにマージする際、コミットメッセージに Pull Request の作業内容を Conventional Commits の形式で記述し、末尾に Issue 番号を含める。
+Pull Request を `Squash And Merge` して `main` ブランチにマージする際、コミットメッセージに Pull Request の作業内容を Conventional Commits の形式で記述し、末尾に PR 番号を含める。
 
 ```txt
-feat: 練習タイマーを追加 (#12)
+feat: 練習タイマーを追加 (#13)
 ```
 
-GitHub では `#12` のような Issue 番号は自動でリンクされる。
+GitHub では `#13` のような Issue / PR 番号は自動でリンクされる。
 
-`main` ブランチの squash merge commit に付与する Issue 番号は、履歴から関連 Issue を追跡しやすくするために利用する。
+`main` ブランチの squash merge commit に付与する PR 番号は、履歴から関連 PR を追跡しやすくするために利用する。
 
 ## ブランチについて
 
